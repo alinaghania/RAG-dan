@@ -1,7 +1,7 @@
 python-dotenv
 openai
 langchain
-
+elasticsearch
 markdown
 langchain_openai
 langchain-community
