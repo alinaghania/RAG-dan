@@ -2,7 +2,7 @@
 import os
 
 import streamlit as st
-from dotenv import load_dotenv
+
 from elasticsearch import Elasticsearch
 
 # load_dotenv()
@@ -32,6 +32,7 @@ OPENAI_API_KEY = st.secrets["openai"]["api_key"]
 
 st.set_page_config(page_title="RAG")
 st.title("R.A.G - Ask me anything")
+
 
 ### FUNCTIONS ###
 
@@ -116,7 +117,7 @@ def get_response(user_prompt, chat_history):
     """
 
     prompt = ChatPromptTemplate.from_template(template)
-    model = ChatOpenAI(model="gpt-4o")
+    model = ChatOpenAI(model="gpt-4o", api_key=OPENAI_API_KEY)
     chain = prompt | model | StrOutputParser()
 
     return chain.stream({"context": itemgetter('context'), 
@@ -168,3 +169,26 @@ if __name__ == '__main__':
     for i, question in enumerate(questions, start=1):
         with st.expander(f"Question {i}"):
             st.write(question)  # Display the actual question when expanded
+
+# Updated CSS for background image
+page_bg_img = '''
+<style>
+body {
+background-image: url("https://upload.wikimedia.org/wikipedia/fr/9/9d/Peugeot_2021_Logo.svg");
+background-size: contain;
+background-repeat: no-repeat;
+background-attachment: fixed;
+background-position: center;
+opacity: 0.95;
+}
+
+[data-testid="stAppViewContainer"] {
+background: rgba(255, 255, 255, 0.7); /* Slight white overlay to keep the content readable */
+}
+
+[data-testid="stHeader"] {
+background: rgba(0, 0, 0, 0);
+}
+</style>
+'''
+st.markdown(page_bg_img, unsafe_allow_html=True)
