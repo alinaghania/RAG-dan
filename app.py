@@ -5,7 +5,7 @@ import streamlit as st
 from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
 
-load_dotenv()
+# load_dotenv()
 from operator import itemgetter
 
 from langchain_core.output_parsers import StrOutputParser
@@ -28,7 +28,7 @@ es_client = Elasticsearch(
     api_key=st.secrets["elasticsearch"]["api_key"]
 )
 
-openai_api_key = st.secrets["openai"]["api_key"]
+OPENAI_API_KEY = st.secrets["openai"]["api_key"]
 
 st.set_page_config(page_title="RAG")
 st.title("R.A.G - Ask me anything")
