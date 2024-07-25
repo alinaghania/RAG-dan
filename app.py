@@ -16,11 +16,19 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 ### CONSTANTS ###
 
-# Initialize Elasticsearch and OpenAI clients
+# # Initialize Elasticsearch and OpenAI clients
+# es_client = Elasticsearch(
+#     "https://371e52c2ddc94eeda8d2dbeb8acc5645.us-central1.gcp.cloud.es.io:443",
+#     api_key=os.environ["elastic_host"]
+# )
+
+
 es_client = Elasticsearch(
-    "https://371e52c2ddc94eeda8d2dbeb8acc5645.us-central1.gcp.cloud.es.io:443",
-    api_key=os.environ["elastic_host"]
+    st.secrets["elasticsearch"]["url"],
+    api_key=st.secrets["elasticsearch"]["api_key"]
 )
+
+openai_api_key = st.secrets["openai"]["api_key"]
 
 st.set_page_config(page_title="RAG")
 st.title("R.A.G - Ask me anything")
