@@ -1,71 +1,71 @@
-### IMPORTS ###
 import os
+import base64
+from io import BytesIO
+from typing import List
 
 import streamlit as st
-
 from elasticsearch import Elasticsearch
-
-# load_dotenv()
-from operator import itemgetter
-
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
-# from langchain_core.runnables import RunnablePassthrough
+from sentence_transformers import SentenceTransformer
+from langchain_core.output_parsers import JsonOutputParser
+from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.pydantic_v1 import BaseModel, Field
+from PIL import Image
+from langchain_core.output_parsers import StrOutputParser
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 ### CONSTANTS ###
 
-# # Initialize Elasticsearch and OpenAI clients
-# es_client = Elasticsearch(
-#     "https://371e52c2ddc94eeda8d2dbeb8acc5645.us-central1.gcp.cloud.es.io:443",
-#     api_key=os.environ["elastic_host"]
-# )
-
-
+# Initialize Elasticsearch and OpenAI clients
 es_client = Elasticsearch(
     st.secrets["elasticsearch"]["url"],
-    api_key=st.secrets["elasticsearch"]["api_key"]
+    api_key=st.secrets["elasticsearch"]["api_key"],
+    verify_certs=False,
+    request_timeout=200,
+    max_retries=10,
+    retry_on_timeout=True
 )
-## key
 
 OPENAI_API_KEY = st.secrets["openai"]["api_key"]
 
 st.set_page_config(page_title="RAG")
 st.title("R.A.G - Ask me anything")
 
+# Initialize the Sentence-BERT model
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Define the fields to use for each index in Elasticsearch 
+index_source_fields = {
+    "peugeot_ev_pdf": ["content"],
+    "images_peugeot_ev_pdf": ["description", "base64"]
+}
 
 ### FUNCTIONS ###
 
 # Define the Elasticsearch query to retrieve the results
-def get_elasticsearch_results(query, size=1):
-    es_query = {
-        "retriever": {
-            "rrf": {
-                "retrievers": [
+import logging
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def get_elasticsearch_results(query, size=3):
+    embedding = model.encode(query).tolist()
+
+    es_query_text = {
+        "query": {
+            "bool": {
+                "must": [
+                    {"exists": {"field": "vector"}},  # Ensure the vector field exists
                     {
-                        "standard": {
-                            "query": {
-                                "multi_match": {
-                                    "query": query,
-                                    "fields": [
-                                        "title",
-                                        "content"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "standard": {
-                            "query": {
-                                "multi_match": {
-                                    "query": query,
-                                    "fields": [
-                                        "title",
-                                        "content"
-                                    ]
-                                }
+                        "script_score": {
+                            "query": {"match_all": {}},
+                            "script": {
+                                "source": "cosineSimilarity(params.query_vector, 'vector') + 1.0",
+                                "params": {"query_vector": embedding}
                             }
                         }
                     }
@@ -74,18 +74,37 @@ def get_elasticsearch_results(query, size=1):
         },
         "size": size
     }
-    result = es_client.search(index="data_for_rag,documents", body=es_query)
-    return result["hits"]["hits"]
 
-# Define the fields to use for each index in Elasticsearch 
-index_source_fields = {
-    "data_for_rag": [
-        "content"
-    ],
-    "documents": [
-        "content"
-    ]
-}
+    es_query_images = {
+        "query": {
+            "bool": {
+                "must": [
+                    {"exists": {"field": "vector"}},  # Ensure the vector field exists
+                    {
+                        "script_score": {
+                            "query": {"match_all": {}},
+                            "script": {
+                                "source": "cosineSimilarity(params.query_vector, 'vector') + 1.0",
+                                "params": {"query_vector": embedding}
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "size": 3
+    }
+
+    try:
+        text_results = es_client.search(index="peugeot_ev_pdf", body=es_query_text)
+        image_results = es_client.search(index="images_peugeot_ev_pdf", body=es_query_images)
+        return text_results["hits"]["hits"], image_results["hits"]["hits"]
+    except Exception as e:
+        logger.error(f"Error querying Elasticsearch: {e}")
+        # Capture and log the response body for more details
+        if hasattr(e, 'info'):
+            logger.error(f"Elasticsearch error info: {e.info}")
+        return [], []
 
 # Format the context results from Elasticsearch
 def format_context_results(results):
@@ -96,10 +115,16 @@ def format_context_results(results):
         context += f"{hit_context}\n"
     return context
 
+# Define the Pydantic model for output parsing
+class RelevanceOutput(BaseModel):
+    relevant: str = Field(..., description="yes or no")
+
+output_parser = JsonOutputParser(pydantic_object=RelevanceOutput)
+
 def get_response(user_prompt, chat_history):
-    elasticsearch_context = get_elasticsearch_results(user_prompt)
-    context = format_context_results(elasticsearch_context)
-    
+    text_results, image_results = get_elasticsearch_results(user_prompt)
+    context = format_context_results(text_results)
+
     template = f"""
                 ## Instructions for the Assistant
 
@@ -114,12 +139,11 @@ def get_response(user_prompt, chat_history):
                 - **Markdown Usage**: Employ Markdown for code examples and to present structured data in tables.
                 - **Precision and Reliability**: Ensure all responses are correct, factual, precise, and directly address the query.
                 - **Conciseness**: Be brief and avoid unnecessary elaborations, just answer the question directly, if the user wants more information, they will ask,then you can delve deeper, so 1-2 sentences are enough.
-                - **Avoid Incorrect Syntax**: Do not use incorrect markup like `\text`., never use this, always use markdown syntax.
+                - **Avoid Incorrect Syntax**: Do not use incorrect markup like `\\text`., never use this, always use markdown syntax.
                 - **Use Tables for Structured Data**: When presenting structured data, use tables for clarity and organization.
                 - **Use Code Blocks for Code**: For code examples, use code blocks to distinguish them from regular text.
                 - **Use Bullet Points for Lists**: Use bullet points for lists to improve readability.
                 - **Use Math Blocks for Formulas**: For mathematical formulas, use math blocks to ensure proper rendering.
-                
 
                 ### Engagement and Clarity
                 - **Encourage Specifics**: Ask the user to clarify if the question is too broad.
@@ -131,7 +155,7 @@ def get_response(user_prompt, chat_history):
                 ```markdown
                 Question: What is the price of a charge?
                 Answer: The price for charging a vehicle depends on several factors including the capacity of the battery, the consumption rate, and the cost of electricity. You can estimate the cost of a full charge with the formula:
-                \[ \text Capacity of the battery in kWh \times \text tariff per kWh \]
+                \\[ \\text Capacity of the battery in kWh \\times \\text tariff per kWh \\]
                 Example for the E-208 with a 156 ch engine: Would you like more information on different energy costs?
 
                 please answer like this for all the questions, like a conversation and not a lecture.
@@ -154,27 +178,65 @@ def get_response(user_prompt, chat_history):
                 Question: {user_prompt}
                 History: {chat_history}
                 Answer:
-                
-                
-            
-            """
-            
+    """
 
     prompt = ChatPromptTemplate.from_template(template)
-    model = ChatOpenAI(model="gpt-4o", api_key=OPENAI_API_KEY)
+    model = ChatOpenAI(model="gpt-4", api_key=OPENAI_API_KEY)
     chain = prompt | model | StrOutputParser()
 
-    return chain.stream({"context": itemgetter('context'), 
-                         "user_prompt": itemgetter("user_prompt"), 
-                         "chat_history":chat_history
-                         }
-                        )
+    # Convert chat history to list of messages
+    chat_history_list = [{"role": "user", "content": msg.content} if isinstance(msg, HumanMessage) else {"role": "assistant", "content": msg.content} for msg in chat_history]
+
+    return chain.stream({
+        "context": context,
+        "user_prompt": user_prompt,
+        "chat_history": chat_history_list
+    })
+
+def check_image_relevance(user_prompt, image_description):
+    class Relevant(BaseModel):
+        relevant_yes_no: str = Field(description="yes or no")
+        
+    output_parser = JsonOutputParser(pydantic_object=Relevant)
+ 
+    template = ChatPromptTemplate(
+        messages=[
+            SystemMessagePromptTemplate.from_template("Based on the following user query and image description, determine if the image is relevant to the user's query,Answer with 'yes' or 'no'. {format_instructions}"),
+            HumanMessagePromptTemplate.from_template("User query: {user_query}\nImage description: {image_description}")
+        ],
+        input_variables=["user_query", "image_description"],
+        partial_variables={"format_instructions": output_parser.get_format_instructions()}
+    )
+
+    model = ChatOpenAI(model="gpt-4", api_key=OPENAI_API_KEY)
+    chain = template | model | output_parser
+
+    try:
+        result = chain.invoke({
+            "user_query": user_prompt,
+            "image_description": image_description
+        })
+        return result["relevant_yes_no"] == "yes"
+    except Exception as e:
+        print(f"Exception: {e}")
+        return False
+
+def display_images(user_prompt, image_results):
+    for hit in image_results:
+        image_description = hit["_source"].get("description", "No description")
+        if check_image_relevance(user_prompt, image_description):
+            image_base64 = hit["_source"].get("base64", "")
+            if image_base64:
+                image_data = base64.b64decode(image_base64)
+                image = Image.open(BytesIO(image_data))
+                st.image(image)
+                break  # Display only one relevant image
 
 if __name__ == '__main__':
     # session state
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = [
-            AIMessage(content=" Hello Dan, quelles informations ( sur le document)puis-je vous fournir aujourd'hui ?")
+            AIMessage(content="Hello La team, quelles informations (sur le document) puis-je vous fournir aujourd'hui ?")
         ]
 
     # conversation
@@ -195,12 +257,13 @@ if __name__ == '__main__':
             st.markdown(user_query)
 
         with st.chat_message("AI"):
-            
             response = st.write_stream(get_response(user_query, st.session_state.chat_history))
 
         st.session_state.chat_history.append(AIMessage(content=response))
 
-    
+        text_results, image_results = get_elasticsearch_results(user_query)
+        display_images(user_query, image_results)
+
     st.markdown('<div class="QUESTIONS EXAMPLES">', unsafe_allow_html=True)
     questions = [
         "What's the price for a charge?",
