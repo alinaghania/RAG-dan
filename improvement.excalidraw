@@ -1,0 +1,48 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor",
+  "elements": [
+    {
+      "type": "text",
+      "version": 244,
+      "versionNonce": 572164435,
+      "isDeleted": false,
+      "id": "thI_nkDeeHdyCTm-WvYaH",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "angle": 0,
+      "x": 218,
+      "y": 149,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "width": 388.919677734375,
+      "height": 250,
+      "seed": 1456259408,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "boundElements": [],
+      "updated": 1722437335195,
+      "link": null,
+      "locked": false,
+      "fontSize": 20,
+      "fontFamily": 1,
+      "text": "Things to do:\n\n- deeplearning.AI: router/Reasoning loop\n- Remove parsing\n- Ajouter image au code\n- UI\n- Présentation\n\nBonus:\n- Reasoning loop",
+      "textAlign": "left",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "Things to do:\n\n- deeplearning.AI: router/Reasoning loop\n- Remove parsing\n- Ajouter image au code\n- UI\n- Présentation\n\nBonus:\n- Reasoning loop",
+      "lineHeight": 1.25,
+      "baseline": 243
+    }
+  ],
+  "appState": {
+    "gridSize": null,
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}
