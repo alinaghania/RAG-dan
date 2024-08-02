@@ -127,86 +127,105 @@ def init_router(user_query, documents):
 
 
 
-def get_response(user_prompt, chat_history, context):    
-    # template = f"""
-    #             ## Instructions for the Assistant
+# def get_response(user_prompt, chat_history, context):    
+#     # template = f"""
+#     #             ## Instructions for the Assistant
 
-    #             ### Overview
-    #             - **Purpose**: You are designed to assist with question-answering tasks.
-    #             - **Accuracy**: Answer questions based solely on the information presented.
-    #             - **Admit Uncertainty**: If unsure, respond with "I don't know" rather than speculating.
-    #             - **one or two sentences**: Keep responses concise and to the point.
-    #             - **don't answer if it's not in the context, and the question is in other topic **: Only use the information provided in the context.
+#     #             ### Overview
+#     #             - **Purpose**: You are designed to assist with question-answering tasks.
+#     #             - **Accuracy**: Answer questions based solely on the information presented.
+#     #             - **Admit Uncertainty**: If unsure, respond with "I don't know" rather than speculating.
+#     #             - **one or two sentences**: Keep responses concise and to the point.
+#     #             - **don't answer if it's not in the context, and the question is in other topic **: Only use the information provided in the context.
 
-    #             ### Formatting and Structure
-    #             - **Markdown Usage**: Employ Markdown for code examples and to present structured data in tables.
-    #             - **Precision and Reliability**: Ensure all responses are correct, factual, precise, and directly address the query.
-    #             - **Conciseness**: Be brief and avoid unnecessary elaborations, just answer the question directly, if the user wants more information, they will ask,then you can delve deeper, so 1-2 sentences are enough.
-    #             - **Avoid Incorrect Syntax**: Do not use incorrect markup like `\text`., never use this, always use markdown syntax.
-    #             - **Use Tables for Structured Data**: When presenting structured data, use tables for clarity and organization.
-    #             - **Use Code Blocks for Code**: For code examples, use code blocks to distinguish them from regular text.
-    #             - **Use Bullet Points for Lists**: Use bullet points for lists to improve readability.
-    #             - **Use Math Blocks for Formulas**: For mathematical formulas, use math blocks to ensure proper rendering.
+#     #             ### Formatting and Structure
+#     #             - **Markdown Usage**: Employ Markdown for code examples and to present structured data in tables.
+#     #             - **Precision and Reliability**: Ensure all responses are correct, factual, precise, and directly address the query.
+#     #             - **Conciseness**: Be brief and avoid unnecessary elaborations, just answer the question directly, if the user wants more information, they will ask,then you can delve deeper, so 1-2 sentences are enough.
+#     #             - **Avoid Incorrect Syntax**: Do not use incorrect markup like `\text`., never use this, always use markdown syntax.
+#     #             - **Use Tables for Structured Data**: When presenting structured data, use tables for clarity and organization.
+#     #             - **Use Code Blocks for Code**: For code examples, use code blocks to distinguish them from regular text.
+#     #             - **Use Bullet Points for Lists**: Use bullet points for lists to improve readability.
+#     #             - **Use Math Blocks for Formulas**: For mathematical formulas, use math blocks to ensure proper rendering.
                 
 
-    #             ### Engagement and Clarity
-    #             - **Encourage Specifics**: Ask the user to clarify if the question is too broad.
-    #             - **Keep the Conversation Going**: Always conclude responses with a contextually relevant question to encourage further dialogue.
+#     #             ### Engagement and Clarity
+#     #             - **Encourage Specifics**: Ask the user to clarify if the question is too broad.
+#     #             - **Keep the Conversation Going**: Always conclude responses with a contextually relevant question to encourage further dialogue.
 
-    #             ### Example Responses
+#     #             ### Example Responses
 
-    #             **Incorrect Approach**:
-    #             ```markdown
-    #             Question: What is the price of a charge?
-    #             Answer: The price for charging a vehicle depends on several factors including the capacity of the battery, the consumption rate, and the cost of electricity. You can estimate the cost of a full charge with the formula:
-    #             \[ \text Capacity of the battery in kWh \times \text tariff per kWh \]
-    #             Example for the E-208 with a 156 ch engine: Would you like more information on different energy costs?
+#     #             **Incorrect Approach**:
+#     #             ```markdown
+#     #             Question: What is the price of a charge?
+#     #             Answer: The price for charging a vehicle depends on several factors including the capacity of the battery, the consumption rate, and the cost of electricity. You can estimate the cost of a full charge with the formula:
+#     #             \[ \text Capacity of the battery in kWh \times \text tariff per kWh \]
+#     #             Example for the E-208 with a 156 ch engine: Would you like more information on different energy costs?
 
-    #             please answer like this for all the questions, like a conversation and not a lecture.
-    #             **Correct Approach**:
-    #             Question: What is the price of a charge?
-    #             Answer: The price depends, do you have a specific vehicle in mind? Perhaps the average price, or for a model like the E-208?
-    #             Follow-up Question: What is the price of a charge for the E-208?
-    #             Response: The price is ...€ for a full charge. Would you like to know the cost for other distances or for other vehicles?
-    #             Further Question: other km
-    #             Response: Below is a table with the pricing for the E-208 for various distances:
-    #             | Distance (km) | Price (€) |
-    #             |---------------|-----------|
-    #             | Example       | Example   |
-    #             | Example       | Example   |
-    #             | Example       | Example   |
-    #             | Example       | Example   |
+#     #             please answer like this for all the questions, like a conversation and not a lecture.
+#     #             **Correct Approach**:
+#     #             Question: What is the price of a charge?
+#     #             Answer: The price depends, do you have a specific vehicle in mind? Perhaps the average price, or for a model like the E-208?
+#     #             Follow-up Question: What is the price of a charge for the E-208?
+#     #             Response: The price is ...€ for a full charge. Would you like to know the cost for other distances or for other vehicles?
+#     #             Further Question: other km
+#     #             Response: Below is a table with the pricing for the E-208 for various distances:
+#     #             | Distance (km) | Price (€) |
+#     #             |---------------|-----------|
+#     #             | Example       | Example   |
+#     #             | Example       | Example   |
+#     #             | Example       | Example   |
+#     #             | Example       | Example   |
 
-    #             Answer the following questions considering the context and if you need the history of the conversation:
-    #             context: {context}
-    #             Question: {user_prompt}
-    #             History: {chat_history}
-    #             Answer:
+#     #             Answer the following questions considering the context and if you need the history of the conversation:
+#     #             context: {context}
+#     #             Question: {user_prompt}
+#     #             History: {chat_history}
+#     #             Answer:
                 
                 
             
-    #         """
-    template = f"""
+#     #         """
+#     template = f"""
     
-        Reformulate the answer be precise concise and to the point, and always answer based on the context provided.
+#         Reformulate the answer be precise concise and to the point, and always answer based on the context provided.
+#         context: {context}
+#         Question: {user_prompt}
+#         History: {chat_history}
+
+        
+#         """
+
+            
+
+#     prompt = ChatPromptTemplate.from_template(template)
+#     model = ChatOpenAI(model="gpt-4o", api_key=OPENAI_API_KEY)
+#     chain = prompt | model | StrOutputParser()
+    
+
+#     return chain.stream({"context": itemgetter('context'), 
+#                          "user_prompt": itemgetter("user_prompt"), 
+#                          "chat_history":chat_history
+#                          }
+#                         )
+
+def get_response(user_prompt, chat_history, context):
+    template = f"""
+        Reformulate the answer to be precise and to the point. Always answer based on the context provided.
         context: {context}
         Question: {user_prompt}
         History: {chat_history}
-
-        
-        """
-
-            
+    """
 
     prompt = ChatPromptTemplate.from_template(template)
     model = ChatOpenAI(model="gpt-4o", api_key=OPENAI_API_KEY)
     chain = prompt | model | StrOutputParser()
 
-    return chain.stream({"context": itemgetter('context'), 
-                         "user_prompt": itemgetter("user_prompt"), 
-                         "chat_history":chat_history
-                         }
-                        )
+    # Return the response generator for streaming
+    response_generator = chain.stream({"context": context, "user_prompt": user_prompt, "chat_history": chat_history})
+    
+    return response_generator
+
 
 # Initialize Elasticsearch and OpenAI clients
 es_client = Elasticsearch(
@@ -232,8 +251,22 @@ index_source_fields = {
     "images_peugeot_ev_pdf": ["description", "base64"]
 }
 
-def get_elasticsearch_results(query, size=3):
-    embedding = model.encode(query).tolist()
+def display_images(user_query, image_results, context):
+    for hit in image_results:
+        # Ensure hit is a dictionary and contains the '_source' key
+        if isinstance(hit, dict) and "_source" in hit:
+            image_description = hit["_source"].get("description", "No description")
+            if check_image_relevance(user_query, image_description, context):
+                image_base64 = hit["_source"].get("base64", "")
+                if image_base64:
+                    image_data = base64.b64decode(image_base64)
+                    image = Image.open(BytesIO(image_data))
+                    st.image(image)
+                    break  # Display only the first relevant image
+
+def get_elasticsearch_results(response, size=3):
+    # Encode the response
+    response_embedding = model.encode(response).tolist()
 
     es_query_images = {
         "query": {
@@ -245,28 +278,31 @@ def get_elasticsearch_results(query, size=3):
                             "query": {"match_all": {}},
                             "script": {
                                 "source": "cosineSimilarity(params.query_vector, 'vector') + 1.0",
-                                "params": {"query_vector": embedding}
+                                "params": {"query_vector": response_embedding}
                             }
                         }
                     }
                 ]
             }
         },
-        "size": 3
+        "size": size
     }
-    try:
 
+    try:
         image_results = es_client.search(index="images_peugeot_ev_pdf", body=es_query_images)
         return image_results["hits"]["hits"]
     except Exception as e:
         logger.error(f"Error querying Elasticsearch: {e}")
-        # Capture and log the response body for more details
         if hasattr(e, 'info'):
             logger.error(f"Elasticsearch error info: {e.info}")
-        return [], []
+        return []
+
+
+
+
     
 
-def check_image_relevance(user_prompt, image_description):
+def check_image_relevance(user_prompt, image_description, context):
     class Relevant(BaseModel):
         relevant_yes_no: str = Field(description="yes or no")
         
@@ -274,10 +310,10 @@ def check_image_relevance(user_prompt, image_description):
  
     template = ChatPromptTemplate(
         messages=[
-            SystemMessagePromptTemplate.from_template("Based on the following user query and image description, determine if the image is relevant to the user's query,Answer with 'yes' or 'no'. {format_instructions}"),
-            HumanMessagePromptTemplate.from_template("User query: {user_query}\nImage description: {image_description}")
+            SystemMessagePromptTemplate.from_template("Based on the following user query, image description and context if relevant, determine if the image is relevant to the user's query,Answer with 'yes' or 'no'. For example if the question is : Quel modele est en tête des ventes de véhicules électriques sur le marché français ?, the answer is : E-208, if you have an image of this model, return yes, but for a summary question don't need to return an image , so answer no{format_instructions}"),
+            HumanMessagePromptTemplate.from_template("User query: {user_query}\nImage description: {image_description},\nContext: {context}")
         ],
-        input_variables=["user_query", "image_description"],
+        input_variables=["user_query", "image_description", "context"],
         partial_variables={"format_instructions": output_parser.get_format_instructions()}
     )
 
@@ -295,26 +331,15 @@ def check_image_relevance(user_prompt, image_description):
         print(f"Exception: {e}")
         return False
 
-def display_images(user_prompt, image_results):
-    for hit in image_results:
-        image_description = hit["_source"].get("description", "No description")
-        if check_image_relevance(user_prompt, image_description):
-            image_base64 = hit["_source"].get("base64", "")
-            if image_base64:
-                image_data = base64.b64decode(image_base64)
-                image = Image.open(BytesIO(image_data))
-                st.image(image)
-                break 
-            
+
 
 if __name__ == '__main__':
-    # documents = parse()
     documents = load_data()
 
     # session state
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = [
-            AIMessage(content=" Hello Dan, quelles informations ( sur le document)puis-je vous fournir aujourd'hui ?")
+            AIMessage(content="Hello Dan, quelles informations (sur le document) puis-je vous fournir aujourd'hui ? R.O.U.T.E.R")
         ]
 
     # conversation
@@ -337,50 +362,60 @@ if __name__ == '__main__':
         with st.chat_message("AI"):
             context = init_router(user_query, documents)
             response = st.write_stream(get_response(user_query, st.session_state.chat_history, context=context))
-
+        
         st.session_state.chat_history.append(AIMessage(content=response))
-        image_results = get_elasticsearch_results(user_query)
-        display_images(user_query, image_results)
-
-    
+        
+        # Use the accumulated response from the agent for image search
+        image_results = get_elasticsearch_results(str(response))
+        display_images(user_query, image_results, context)
+        
     st.markdown('<div class="QUESTIONS EXAMPLES">', unsafe_allow_html=True)
     questions = [
-        "What's the price for a charge?",
-        "Hello, I want to know what are the best applications?",
-        "What is the customer satisfaction rate among French users who switched to electric vehicles?",
-        "Can you provide a brief history of Peugeot's electric vehicles?",
-        "What are the main factors influencing the autonomy of an electric vehicle?",
+        "Un résumé du document.",
+        "La meilleure app pour vérifier l’état de la charge par exemple ?",
+        "Pour la E-3008, quels sont les types de moteurs disponibles ?",
+        "Tell me what's the price to charge my e-208, and then the time to recharge on a born.",
+        "Quel est le modèle en tête des ventes de véhicules électriques sur le marché français ?",
     ]
-    
-    for i, question in enumerate(questions, start=1):
-        with st.expander(f"Question {i}"):
-            st.write(question)  # Display the actual question when expanded
 
+    for question in questions:
+        if st.button(question):
+            # Simulate user query
+            user_query = question
+            st.session_state.chat_history.append(HumanMessage(content=user_query))
 
+            with st.chat_message("Human"):
+                st.markdown(user_query)
 
+            with st.chat_message("AI"):
+                context = init_router(user_query, documents)
+                response = st.write_stream(get_response(user_query, st.session_state.chat_history, context=context))
 
+            st.session_state.chat_history.append(AIMessage(content=response))
+            
+            # Use the accumulated response from the agent for image search
+            image_results = get_elasticsearch_results(str(response))
+            display_images(user_query, image_results, context)
 
+    # Updated CSS for background image
+    page_bg_img = '''
+    <style>
+    body {
+    background-image: url("https://upload.wikimedia.org/wikipedia/fr/9/9d/Peugeot_2021_Logo.svg");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    opacity: 0.95;
+    }
 
+    [data-testid="stAppViewContainer"] {
+    background: rgba(255, 255, 255, 0.7); /* Slight white overlay to keep the content readable */
+    }
 
-# Updated CSS for background image
-page_bg_img = '''
-<style>
-body {
-background-image: url("https://upload.wikimedia.org/wikipedia/fr/9/9d/Peugeot_2021_Logo.svg");
-background-size: contain;
-background-repeat: no-repeat;
-background-attachment: fixed;
-background-position: center;
-opacity: 0.95;
-}
-
-[data-testid="stAppViewContainer"] {
-background: rgba(255, 255, 255, 0.7); /* Slight white overlay to keep the content readable */
-}
-
-[data-testid="stHeader"] {
-background: rgba(0, 0, 0, 0);
-}
-</style>
-'''
-st.markdown(page_bg_img, unsafe_allow_html=True)
+    [data-testid="stHeader"] {
+    background: rgba(0, 0, 0, 0);
+    }
+    </style>
+    '''
+    st.markdown(page_bg_img, unsafe_allow_html=True)
